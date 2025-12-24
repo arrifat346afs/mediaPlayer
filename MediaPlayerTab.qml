@@ -240,13 +240,29 @@ Item {
                 height: parent.height * 0.85
                 anchors.verticalCenter: parent.verticalCenter
                 radius: 6 * userScale
-                color: Qt.rgba(0, 0, 0, 0.3)
+                color: "transparent"
                 clip: true
+
+                property real albumRotation: 0
+
+                NumberAnimation {
+                    id: rotationAnimation
+                    target: thumbnailContainer
+                    property: "albumRotation"
+                    from: 0
+                    to: 360
+                    duration: 20000
+                    running: activePlayer?.playbackState === MprisPlaybackState.Playing
+                    loops: Animation.Infinite
+                }
 
                 DankAlbumArt {
                     id: albumArt
-                    anchors.fill: parent
+                    width: parent.width * 0.76
+                    height: parent.height * 0.76
+                    anchors.centerIn: parent
                     activePlayer: root.activePlayer
+                    rotation: thumbnailContainer.albumRotation
                 }
 
                 // Subtle border
