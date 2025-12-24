@@ -8,7 +8,6 @@
     "capabilities": ["desktop-widget", "media-player", "mpris", "audio-control"],
     "component": "./MediaPlayerTab.qml",
     "icon": "music_note",
-    "settings": "./MediaPlayerSettings.qml",
     "permissions": [
         "settings_read",
         "settings_write",

@@ -15,82 +15,10 @@ Item {
 
     property MprisPlayer activePlayer: MprisController.activePlayer
     property var allPlayers: MprisController.availablePlayers
-    property var targetScreen: null
-    property real popoutX: 0
-    property real popoutY: 0
-    property real popoutWidth: 0
-    property real popoutHeight: 0
-    property real contentOffsetY: 0
-    property string section: ""
-    property int barPosition: SettingsData.Position.Top
-
-    signal showVolumeDropdown(point pos, var screen, bool rightEdge, var player, var players)
-    signal showAudioDevicesDropdown(point pos, var screen, bool rightEdge)
-    signal showPlayersDropdown(point pos, var screen, bool rightEdge, var player, var players)
-    signal hideDropdowns
-    signal volumeButtonExited
-
-    property bool volumeExpanded: false
-    property bool devicesExpanded: false
-    property bool playersExpanded: false
-
-    function resetDropdownStates() {
-        volumeExpanded = false;
-        devicesExpanded = false;
-        playersExpanded = false;
-    }
-
-    DankTooltipV2 {
-        id: sharedTooltip
-    }
-
-    readonly property bool isRightEdge: {
-        if (barPosition === SettingsData.Position.Right)
-            return true;
-        if (barPosition === SettingsData.Position.Left)
-            return false;
-        return section === "right";
-    }
-    readonly property bool __isChromeBrowser: {
-        if (!activePlayer?.identity)
-            return false;
-        const id = activePlayer.identity.toLowerCase();
-        return id.includes("chrome") || id.includes("chromium");
-    }
-    readonly property bool volumeAvailable: (activePlayer && activePlayer.volumeSupported && !__isChromeBrowser) || (AudioService.sink && AudioService.sink.audio)
-    readonly property bool usePlayerVolume: activePlayer && activePlayer.volumeSupported && !__isChromeBrowser
-    readonly property real currentVolume: usePlayerVolume ? activePlayer.volume : (AudioService.sink?.audio?.volume ?? 0)
 
     property bool isSwitching: false
     property string _lastArtUrl: ""
     property string _bgArtSource: ""
-
-    // Derived "no players" state: always correct, no timers.
-    readonly property int _playerCount: allPlayers ? allPlayers.length : 0
-    readonly property bool _noneAvailable: _playerCount === 0
-    readonly property bool _trulyIdle: activePlayer && activePlayer.playbackState === MprisPlaybackState.Stopped && !activePlayer.trackTitle && !activePlayer.trackArtist
-    readonly property bool showNoPlayerNow: (!_switchHold) && (_noneAvailable || _trulyIdle)
-
-    property bool _switchHold: false
-    Timer {
-        id: _switchHoldTimer
-        interval: 650
-        repeat: false
-        onTriggered: _switchHold = false
-    }
-
-    onActivePlayerChanged: {
-        if (!activePlayer) {
-            isSwitching = false;
-            _switchHold = false;
-            return;
-        }
-        isSwitching = true;
-        _switchHold = true;
-        _switchHoldTimer.restart();
-        if (activePlayer.trackArtUrl)
-            loadArtwork(activePlayer.trackArtUrl);
-    }
 
     property string activeTrackArtFile: ""
 
@@ -119,14 +47,34 @@ Item {
         }
     }
 
-    readonly property real ratio: {
-        if (!activePlayer || !activePlayer.length || activePlayer.length <= 0) {
-            return 0;
-        }
-        const pos = (activePlayer.position || 0) % Math.max(1, activePlayer.length);
-        const calculatedRatio = pos / activePlayer.length;
-        return Math.max(0, Math.min(1, calculatedRatio));
+    // Derived "no players" state: always correct, no timers.
+    readonly property int _playerCount: allPlayers ? allPlayers.length : 0
+    readonly property bool _noneAvailable: _playerCount === 0
+    readonly property bool _trulyIdle: activePlayer && activePlayer.playbackState === MprisPlaybackState.Stopped && !activePlayer.trackTitle && !activePlayer.trackArtist
+    readonly property bool showNoPlayerNow: (!_switchHold) && (_noneAvailable || _trulyIdle)
+
+    property bool _switchHold: false
+    Timer {
+        id: _switchHoldTimer
+        interval: 650
+        repeat: false
+        onTriggered: _switchHold = false
     }
+
+    onActivePlayerChanged: {
+        if (!activePlayer) {
+            isSwitching = false;
+            _switchHold = false;
+            return;
+        }
+        isSwitching = true;
+        _switchHold = true;
+        _switchHoldTimer.restart();
+        if (activePlayer.trackArtUrl)
+            loadArtwork(activePlayer.trackArtUrl);
+    }
+
+
 
     // Responsive sizing with min/max constraints
     property real userScale: 1.0
@@ -168,59 +116,6 @@ Item {
         }
     }
 
-    function getAudioDeviceIcon(device) {
-        if (!device || !device.name)
-            return "speaker";
-
-        const name = device.name.toLowerCase();
-
-        if (name.includes("bluez") || name.includes("bluetooth"))
-            return "headset";
-        if (name.includes("hdmi"))
-            return "tv";
-        if (name.includes("usb"))
-            return "headset";
-        if (name.includes("analog") || name.includes("built-in"))
-            return "speaker";
-
-        return "speaker";
-    }
-
-    function getVolumeIcon() {
-        if (!volumeAvailable)
-            return "volume_off";
-
-        const volume = currentVolume;
-
-        if (usePlayerVolume) {
-            if (volume === 0.0)
-                return "music_off";
-            return "music_note";
-        }
-
-        if (volume === 0.0)
-            return "volume_off";
-        if (volume <= 0.33)
-            return "volume_down";
-        if (volume <= 0.66)
-            return "volume_up";
-        return "volume_up";
-    }
-
-    function adjustVolume(step) {
-        if (!volumeAvailable)
-            return;
-        const current = Math.round(currentVolume * 100);
-        const newVolume = Math.min(100, Math.max(0, current + step));
-
-        SessionData.suppressOSDTemporarily();
-        if (usePlayerVolume) {
-            activePlayer.volume = newVolume / 100;
-        } else if (AudioService.sink?.audio) {
-            AudioService.sink.audio.volume = newVolume / 100;
-        }
-    }
-
     Process {
         id: imageDownloader
         running: false
@@ -237,13 +132,17 @@ Item {
         running: false
     }
 
+
+
     property bool isSeeking: false
 
     Timer {
         interval: 1000
         running: activePlayer?.playbackState === MprisPlaybackState.Playing && !isSeeking
         repeat: true
-        onTriggered: activePlayer?.positionChanged()
+        onTriggered: {
+            // Timer tick - position updates are automatically handled by bindings
+        }
     }
 
     Item {
@@ -256,7 +155,7 @@ Item {
             anchors.centerIn: parent
             width: Math.max(parent.width, parent.height) * 1.1
             height: width
-            source: _bgArtSource
+            // source: _bgArtSource
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
             cache: true
@@ -279,7 +178,7 @@ Item {
                 source: bgImage
                 blurEnabled: true
                 blurMax: 64
-                blur: 0.8
+                blur: 2
                 saturation: -0.2
                 brightness: -0.25
             }
@@ -307,7 +206,7 @@ Item {
             anchors.fill: parent
             radius: Theme.cornerRadius
             color: Theme.surface
-            opacity: 0.3
+            opacity: 1
         }
     }
 
@@ -320,13 +219,6 @@ Item {
             name: "music_note"
             size: Theme.iconSize * 3
             color: Qt.rgba(Theme.surfaceText.r, Theme.surfaceText.g, Theme.surfaceText.b, 0.5)
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
-
-        StyledText {
-            text: I18n.tr("No Active Players")
-            font.pixelSize: Theme.fontSizeLarge
-            color: Qt.rgba(Theme.surfaceText.r, Theme.surfaceText.g, Theme.surfaceText.b, 0.7)
             anchors.horizontalCenter: parent.horizontalCenter
         }
     }
@@ -423,7 +315,7 @@ Item {
                             anchors.centerIn: parent
                             name: "skip_previous"
                             size: 28 * userScale
-                            color: Theme.surfaceText
+                            color: Theme.primary
                         }
 
                         MouseArea {
@@ -455,7 +347,7 @@ Item {
                             anchors.centerIn: parent
                             name: activePlayer && activePlayer.playbackState === MprisPlaybackState.Playing ? "pause" : "play_arrow"
                             size: 28 * userScale
-                            color: Theme.surfaceText
+                            color: Theme.primary
                         }
 
                         MouseArea {
@@ -478,7 +370,7 @@ Item {
                             anchors.centerIn: parent
                             name: "skip_next"
                             size: 28 * userScale
-                            color: Theme.surfaceText
+                            color: Theme.primary
                         }
 
                         MouseArea {
@@ -490,33 +382,10 @@ Item {
                         }
                     }
 
-                    // Spacer to push cast button to right
+                    // Spacer to push buttons to right
                     Item {
-                        width: parent.width - (32 * 4 * userScale) - (Theme.spacingS * 4 * userScale)
+                        width: parent.width - (32 * 3 * userScale) - (Theme.spacingS * 3 * userScale)
                         height: 1
-                    }
-
-                    // Cast/Devices Button (Right side)
-                    Rectangle {
-                        width: 32 * userScale
-                        height: 32 * userScale
-                        radius: 16 * userScale
-                        color: "transparent"
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        DankIcon {
-                            anchors.centerIn: parent
-                            name: "cast"
-                            size: 20 * userScale
-                            color: Theme.surfaceText
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            enabled: false
-                        }
                     }
                 }
 
