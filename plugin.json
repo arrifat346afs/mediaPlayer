@@ -7,6 +7,7 @@
     "type": "desktop",
     "capabilities": ["desktop-widget", "media-player", "mpris", "audio-control"],
     "component": "./MediaPlayerTab.qml",
+    "settings": "./MediaPlayerSettings.qml",
     "icon": "music_note",
     "permissions": [
         "settings_read",

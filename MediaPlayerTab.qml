@@ -1,17 +1,25 @@
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Services.Mpris
 import Quickshell.Io
 import qs.Common
 import qs.Services
 import qs.Widgets
+import qs.Modules.Plugins
 
-Item {
+DesktopPluginComponent {
     id: root
+
+    // settings data here
+    property real backgroundOpacity: (pluginData.backgroundOpacity ?? 80) / 100
 
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
+
+    opacity: showNoPlayerNow ? 0 : 1
+    Behavior on opacity { NumberAnimation { duration: 300 } }
 
     property MprisPlayer activePlayer: MprisController.activePlayer
     property var allPlayers: MprisController.availablePlayers
@@ -222,8 +230,7 @@ Item {
         Rectangle {
             anchors.fill: parent
             radius: Theme.cornerRadius
-            color: Theme.surface
-            opacity: 1
+            color: Theme.withAlpha(Theme.surface, root.backgroundOpacity)
         }
     }
 
