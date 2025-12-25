@@ -485,101 +485,26 @@ DesktopPluginComponent {
                     width: parent.width
                     spacing: 2 * userScale
 
-                    // Progress bar
-                    Item {
+                    // Integrated DankSeekbar
+                    DankSeekbar {
+                        id: progressSeekbar
                         width: parent.width
-                        height: 16 * userScale
+                        height: 16 * userScale // Consistent with previous design
+                        activePlayer: root.activePlayer
+                        
+                        // Keep the Tab's seeking state in sync with the component
+                        onIsSeekingChanged: root.isSeeking = isSeeking
 
-                        // Custom progress bar - updates with timer
-                        Item {
-                            anchors.fill: parent
-                            visible: activePlayer && activePlayer.length > 0
-
-                            property real progress: {
-                                root._positionSnapshot; // depend on timer updates
-                                if (!activePlayer || activePlayer.length <= 0) return 0
-                                const pos = Math.max(0, activePlayer.position || 0)
-                                return Math.min(1, pos / activePlayer.length)
-                            }
-
-                            Rectangle {
-                                width: parent.width
-                                height: 3
-                                anchors.verticalCenter: parent.verticalCenter
-                                color: Qt.rgba(Theme.surfaceVariant.r, Theme.surfaceVariant.g, Theme.surfaceVariant.b, 0.40)
-                                radius: height / 2
-                            }
-
-                            Rectangle {
-                                width: Math.max(0, parent.width * parent.progress)
-                                height: 3
-                                anchors.left: parent.left
-                                anchors.verticalCenter: parent.verticalCenter
-                                color: Theme.primary
-                                radius: height / 2
-                                Behavior on width { NumberAnimation { duration: 80 } }
-                            }
-
-                            Rectangle {
-                                id: playhead
-                                width: 3
-                                height: 14
-                                radius: 1.5
-                                color: Theme.primary
-                                x: Math.max(0, Math.min(parent.width, parent.width * parent.progress)) - width / 2
-                                y: parent.height / 2 - height / 2
-                                Behavior on x { NumberAnimation { duration: 80 } }
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                enabled: activePlayer && activePlayer.canSeek && activePlayer.length > 0
-                                property real pendingSeekPosition: -1
-
-                                Timer {
-                                    id: seekDebounceTimer
-                                    interval: 150
-                                    onTriggered: {
-                                        if (parent.pendingSeekPosition >= 0 && activePlayer && activePlayer.canSeek && activePlayer.length > 0) {
-                                            const clamped = Math.min(parent.pendingSeekPosition, activePlayer.length * 0.99)
-                                            activePlayer.position = clamped
-                                            parent.pendingSeekPosition = -1
-                                        }
-                                    }
-                                }
-
-                                onPressed: (mouse) => {
-                                    root.isSeeking = true
-                                    if (activePlayer && activePlayer.length > 0 && activePlayer.canSeek) {
-                                        const r = Math.max(0, Math.min(1, mouse.x / parent.width))
-                                        pendingSeekPosition = r * activePlayer.length
-                                        seekDebounceTimer.restart()
-                                    }
-                                }
-                                onReleased: {
-                                    root.isSeeking = false
-                                    seekDebounceTimer.stop()
-                                    if (pendingSeekPosition >= 0 && activePlayer && activePlayer.canSeek && activePlayer.length > 0) {
-                                        const clamped = Math.min(pendingSeekPosition, activePlayer.length * 0.99)
-                                        activePlayer.position = clamped
-                                        pendingSeekPosition = -1
-                                    }
-                                }
-                                onPositionChanged: (mouse) => {
-                                    if (pressed && root.isSeeking && activePlayer && activePlayer.length > 0 && activePlayer.canSeek) {
-                                        const r = Math.max(0, Math.min(1, mouse.x / parent.width))
-                                        pendingSeekPosition = r * activePlayer.length
-                                        seekDebounceTimer.restart()
-                                    }
-                                }
-                                onClicked: (mouse) => {
-                                    if (activePlayer && activePlayer.length > 0 && activePlayer.canSeek) {
-                                        const r = Math.max(0, Math.min(1, mouse.x / parent.width))
-                                        activePlayer.position = r * activePlayer.length
-                                    }
-                                }
+                        // Ensure the seekbar re-evaluates on our high-frequency timer
+                        // by forcing a dependency on the timer's snapshot
+                        Binding {
+                            target: progressSeekbar
+                            property: "value"
+                            value: {
+                                root._positionSnapshot; // dependency for update
+                                if (!root.activePlayer || root.activePlayer.length <= 0) return 0;
+                                const pos = Math.max(0, root.activePlayer.position || 0);
+                                return Math.min(1, pos / root.activePlayer.length);
                             }
                         }
                     }
