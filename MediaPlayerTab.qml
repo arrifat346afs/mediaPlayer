@@ -234,6 +234,56 @@ DesktopPluginComponent {
         }
     }
 
+    // --- Ocean Wave Background ---
+    Canvas {
+        id: waveCanvas
+        anchors.fill: parent
+        z: 1 // Ensures it stays behind the main content
+        opacity: activePlayer && activePlayer.playbackState === MprisPlaybackState.Playing ? 0.4 : 0.1
+        
+        property real phase: 0
+        
+        // This timer drives the animation "movement"
+        Timer {
+            interval: 16 // ~60 FPS
+            running: activePlayer && activePlayer.playbackState === MprisPlaybackState.Playing
+            repeat: true
+            onTriggered: {
+                waveCanvas.phase += 0.05;
+                waveCanvas.requestPaint();
+            }
+        }
+
+        onPaint: {
+            var ctx = getContext("2d");
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw two overlapping waves for a "deep" ocean feel
+            drawWave(ctx, "#40" + Theme.primary.toString().substring(1), 0.5, 15, phase);
+            drawWave(ctx, "#60" + Theme.primary.toString().substring(1), 0.8, 10, phase * 0.7);
+            drawWave(ctx, "#70" + Theme.primary.toString().substring(1), 0.8, 10, phase * 0.9);
+        }
+
+        function drawWave(ctx, color, speed, amplitude, currentPhase) {
+            ctx.beginPath();
+            ctx.fillStyle = color;
+            
+            var waveHeight = height * 0.7; // Position waves at the bottom 30%
+            ctx.moveTo(0, height);
+            
+            for (var x = 0; x <= width; x += 5) {
+                // Sine wave calculation: y = amplitude * sin(frequency * x + phase)
+                var y = waveHeight + Math.sin(x * 0.02 + currentPhase) * amplitude;
+                ctx.lineTo(x, y);
+            }
+            
+            ctx.lineTo(width, height);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+    // --- End Ocean Wave Background ---
+
     Column {
         anchors.centerIn: parent
         spacing: Theme.spacingM
