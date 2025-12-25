@@ -294,7 +294,7 @@ DesktopPluginComponent {
                     anchors.fill: parent
                     radius: parent.radius
                     color: "transparent"
-                    border.color: Qt.rgba(1, 1, 1, 0.1)
+                    border.color: Theme.primary
                     border.width: 1
                 }
             }
