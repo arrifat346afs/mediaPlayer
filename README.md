@@ -34,6 +34,11 @@ You can customize the following settings in the plugin configuration:
     - `mpris_control`: To interact with media players.
     - `audio_control`: For system volume management.
 
+## Note
+
+> [!NOTE]
+> The media player widget will only be visible when there is an active media player (e.g., Spotify, VLC, Firefox) running and playing media. If no active media session is detected, the widget will automatically hide itself.
+
 ## Installation
 
 Ensure this plugin is placed in your Dank Material Shell plugins directory:
