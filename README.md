@@ -1,6 +1,6 @@
 # Media Player Plugin for Dank Material Shell
 
-![Media Player Screenshot](screenshot.png)
+![Media Player Screenshot](screenshot_8.png)
 
 A feature-rich media player widget for Dank Material Shell with MPRIS support, volume control, and a beautiful, responsive interface.
 
