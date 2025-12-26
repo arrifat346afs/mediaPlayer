@@ -70,6 +70,7 @@ DesktopPluginComponent {
     }
 
     onActivePlayerChanged: {
+        root._positionSnapshot = 0;
         if (!activePlayer) {
             isSwitching = false;
             _switchHold = false;
@@ -99,6 +100,7 @@ DesktopPluginComponent {
     Connections {
         target: activePlayer
         function onTrackTitleChanged() {
+            root._positionSnapshot = 0;
             _switchHoldTimer.restart();
             maybeFinishSwitch();
         }
