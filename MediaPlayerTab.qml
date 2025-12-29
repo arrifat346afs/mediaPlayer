@@ -52,6 +52,52 @@ DesktopPluginComponent {
         if (activePlayer && activePlayer.trackTitle !== "") {
             isSwitching = false;
             _switchHold = false;
+            _stalePositionDetected = false;
+        }
+    }
+    
+    function getDisplayPosition() {
+        if (!activePlayer) return 0;
+        
+        const rawPos = Math.max(0, activePlayer.position || 0);
+        const length = Math.max(1, activePlayer.length || 1);
+        
+        // If we detected stale position, show 0 until proper data arrives
+        if (_stalePositionDetected) {
+            return 0;
+        }
+        
+        // Handle stale position data when switching videos
+        if (isSwitching && rawPos >= length * 0.9) {
+            return 0;
+        }
+        
+        const pos = activePlayer.length ? rawPos % Math.max(1, activePlayer.length) : rawPos;
+        return pos;
+    }
+    
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return minutes + ":" + (secs < 10 ? "0" : "") + secs;
+    }
+    
+    Component.onCompleted: {
+        // Initialize with current player state if available
+        if (activePlayer) {
+            // Get actual position after MPRIS fully loads
+            Qt.callLater(() => {
+                try {
+                    const actualPos = activePlayer.position || 0;
+                    const length = activePlayer.length || 1;
+                    root._positionSnapshot = actualPos;
+                    if (progressSeekbar && actualPos > 0) {
+                        progressSeekbar.value = Math.min(1, actualPos / length);
+                    }
+                } catch (e) {
+                    // Handle MPRIS errors
+                }
+            });
         }
     }
 
@@ -66,11 +112,17 @@ DesktopPluginComponent {
         id: _switchHoldTimer
         interval: 650
         repeat: false
-        onTriggered: _switchHold = false
+        onTriggered: {
+            _switchHold = false;
+            if (isSwitching) {
+                isSwitching = false;
+            }
+        }
     }
 
     onActivePlayerChanged: {
         root._positionSnapshot = 0;
+        root._forceUpdate = !root._forceUpdate;
         if (!activePlayer) {
             isSwitching = false;
             _switchHold = false;
@@ -81,6 +133,20 @@ DesktopPluginComponent {
         _switchHoldTimer.restart();
         if (activePlayer.trackArtUrl)
             loadArtwork(activePlayer.trackArtUrl);
+        
+        // Get actual current position after a short delay to allow MPRIS to sync
+        Qt.callLater(() => {
+            try {
+                const actualPos = activePlayer.position || 0;
+                root._positionSnapshot = actualPos;
+                if (progressSeekbar && actualPos > 0) {
+                    progressSeekbar.value = Math.min(1, actualPos / Math.max(1, activePlayer.length || 1));
+                    isSwitching = false;
+                }
+            } catch (e) {
+                // Handle errors gracefully
+            }
+        });
     }
 
 
@@ -101,13 +167,38 @@ DesktopPluginComponent {
         target: activePlayer
         function onTrackTitleChanged() {
             root._positionSnapshot = 0;
+            root._forceUpdate = !root._forceUpdate;
+            // Force immediate position reset for new track
+            if (activePlayer.position > 0 && activePlayer.length > 0) {
+                const progressRatio = activePlayer.position / activePlayer.length;
+                if (progressRatio > 0.9) {
+                    // Likely stale data - force reset
+                    root._stalePositionDetected = true;
+                }
+            }
             _switchHoldTimer.restart();
             maybeFinishSwitch();
+            // Reset progress bar immediately on track change
+            if (progressSeekbar) {
+                progressSeekbar.value = 0;
+            }
         }
         function onTrackArtUrlChanged() {
             if (activePlayer?.trackArtUrl) {
                 _lastArtUrl = activePlayer.trackArtUrl;
                 loadArtwork(activePlayer.trackArtUrl);
+            }
+        }
+        function onPositionChanged() {
+            try {
+                if (root._stalePositionDetected && activePlayer.position < activePlayer.length * 0.5) {
+                    // Position updated properly now
+                    root._stalePositionDetected = false;
+                    root._forceUpdate = !root._forceUpdate;
+                }
+            } catch (e) {
+                // MPRIS service disappeared - reset state
+                root._stalePositionDetected = false;
             }
         }
     }
@@ -146,16 +237,31 @@ DesktopPluginComponent {
 
     property bool isSeeking: false
     property real _positionSnapshot: 0
+    property bool _forceUpdate: false
+    property real _animationTick: 0
+    property bool _stalePositionDetected: false
 
     Timer {
         id: positionUpdateTimer
         interval: 100
-        running: activePlayer?.playbackState === MprisPlaybackState.Playing && !isSeeking
+        running: true
         repeat: true
         onTriggered: {
             // Update snapshot to trigger binding re-evaluation
             if (activePlayer) {
-                root._positionSnapshot = activePlayer.position;
+                try {
+                    const newPosition = activePlayer.position || 0;
+                    root._positionSnapshot = newPosition;
+                    // Force progress bar refresh when switching
+                    if (isSwitching || _stalePositionDetected) {
+                        if (progressSeekbar) {
+                            progressSeekbar.value = progressSeekbar.calculateProgress();
+                        }
+                    }
+                } catch (e) {
+                    // Handle MPRIS service errors gracefully
+                    root._positionSnapshot = 0;
+                }
             }
         }
     }
@@ -164,7 +270,7 @@ DesktopPluginComponent {
     NumberAnimation {
         id: progressUpdateAnimation
         target: root
-        property: "_updateTick"
+        property: "_animationTick"
         from: 0
         to: 10000
         duration: 10000
@@ -496,17 +602,51 @@ DesktopPluginComponent {
                         
                         // Keep the Tab's seeking state in sync with the component
                         onIsSeekingChanged: root.isSeeking = isSeeking
+                        
+                        function calculateProgress() {
+                            if (!root.activePlayer || root.activePlayer.length <= 0) return 0;
+                            
+                            const rawPos = Math.max(0, root.activePlayer.position || 0);
+                            const length = Math.max(1, root.activePlayer.length || 1);
+                            
+                            // If we detected stale position, show 0 until proper data arrives
+                            if (root._stalePositionDetected) {
+                                // Check if position is now valid
+                                if (rawPos < length * 0.8) {
+                                    root._stalePositionDetected = false;
+                                    root.isSwitching = false;
+                                } else {
+                                    return 0;
+                                }
+                            }
+                            
+                            // Reset if position seems stale (at end for new video)
+                            if (root.isSwitching && rawPos >= length * 0.9) {
+                                root._stalePositionDetected = true;
+                                return 0;
+                            }
+                            
+                            // Force position refresh when switching videos
+                            if (root.isSwitching && rawPos > 0 && rawPos < length * 0.8) {
+                                root.isSwitching = false;
+                            }
+                            
+                            return Math.min(1, rawPos / length);
+                        }
 
-                        // Ensure the seekbar re-evaluates on our high-frequency timer
-                        // by forcing a dependency on the timer's snapshot
-                        Binding {
-                            target: progressSeekbar
-                            property: "value"
-                            value: {
-                                root._positionSnapshot; // dependency for update
-                                if (!root.activePlayer || root.activePlayer.length <= 0) return 0;
-                                const pos = Math.max(0, root.activePlayer.position || 0);
-                                return Math.min(1, pos / root.activePlayer.length);
+        // Connect position updates to seekbar value directly
+                        Timer {
+                            interval: 50
+                            running: true
+                            repeat: true
+                            onTriggered: {
+                                if (progressSeekbar && activePlayer) {
+                                    try {
+                                        progressSeekbar.value = progressSeekbar.calculateProgress();
+                                    } catch (e) {
+                                        // Handle MPRIS errors
+                                    }
+                                }
                             }
                         }
                     }
@@ -520,14 +660,9 @@ DesktopPluginComponent {
                             anchors.left: parent.left
                             anchors.verticalCenter: parent.verticalCenter
                             text: {
-                                root._positionSnapshot; // dependency for binding re-evaluation
-                                if (!activePlayer)
-                                    return "0:00";
-                                const rawPos = Math.max(0, activePlayer.position || 0);
-                                const pos = activePlayer.length ? rawPos % Math.max(1, activePlayer.length) : rawPos;
-                                const minutes = Math.floor(pos / 60);
-                                const seconds = Math.floor(pos % 60);
-                                return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+                                // Force dependency on position updates
+                                root._positionSnapshot;
+                                return formatTime(getDisplayPosition());
                             }
                             font.pixelSize: Theme.fontSizeSmall * 0.9 * userScale
                             color: Theme.surfaceVariantText
