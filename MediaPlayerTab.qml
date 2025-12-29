@@ -14,6 +14,7 @@ DesktopPluginComponent {
 
     // settings data here
     property real backgroundOpacity: (pluginData.backgroundOpacity ?? 80) / 100
+    property real borderOpacity: (pluginData.borderOpacity ?? 100) / 100
 
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
@@ -452,7 +453,7 @@ DesktopPluginComponent {
                     anchors.fill: parent
                     radius: parent.radius
                     color: "transparent"
-                    border.color: Theme.primary
+                    border.color: Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, root.borderOpacity)
                     border.width: 1
                 }
             }
