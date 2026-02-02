@@ -15,6 +15,7 @@ DesktopPluginComponent {
     // settings data here
     property real backgroundOpacity: (pluginData.backgroundOpacity ?? 80) / 100
     property real borderOpacity: (pluginData.borderOpacity ?? 100) / 100
+    property bool rotateThumbnail: (pluginData.rotateThumbnail ?? true)
 
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
@@ -435,7 +436,7 @@ DesktopPluginComponent {
                     from: 0
                     to: 360
                     duration: 20000
-                    running: activePlayer?.playbackState === MprisPlaybackState.Playing
+                    running: activePlayer?.playbackState === MprisPlaybackState.Playing && rotateThumbnail
                     loops: Animation.Infinite
                 }
 

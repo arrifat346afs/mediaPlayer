@@ -24,4 +24,11 @@ PluginSettings {
         maximum: 100
         unit: "%"
     }
+
+    ToggleSetting {
+        settingKey: "rotateThumbnail"
+        label: I18n.tr("Rotate Thumbnail")
+        description: I18n.tr("Rotate album artwork when media is playing")
+        defaultValue: true
+    }
 }
