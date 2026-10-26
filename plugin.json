@@ -9,6 +9,7 @@
     "component": "./MediaPlayerTab.qml",
     "settings": "./MediaPlayerSettings.qml",
     "icon": "music_note",
+    "requires_dms": ">=2.0.0",
     "permissions": [
         "settings_read",
         "settings_write",

@@ -7,6 +7,7 @@ import Quickshell.Io
 import qs.Common
 import qs.Services
 import qs.Widgets
+import qs.DCommon.Widgets
 import qs.Modules.Plugins
 
 DesktopPluginComponent {
@@ -399,7 +400,7 @@ DesktopPluginComponent {
         spacing: Theme.spacingM
         visible: showNoPlayerNow
 
-        DankIcon {
+        DIcon {
             name: "music_note"
             size: Theme.iconSize * 3
             color: Qt.rgba(Theme.surfaceText.r, Theme.surfaceText.g, Theme.surfaceText.b, 0.5)
@@ -440,13 +441,25 @@ DesktopPluginComponent {
                     loops: Animation.Infinite
                 }
 
-                DankAlbumArt {
+                // DankAlbumArt was removed in DMS 2.0
+                DCircularImage {
                     id: albumArt
                     width: parent.width * 0.76
                     height: parent.height * 0.76
                     anchors.centerIn: parent
-                    activePlayer: root.activePlayer
                     rotation: thumbnailContainer.albumRotation
+                    imageSource: {
+                        const p = root.activePlayer;
+                        if (!p)
+                            return "";
+                        if (p.trackArtUrl)
+                            return p.trackArtUrl;
+                        const m = p.metadata;
+                        return m && m["mpris:artUrl"] ? m["mpris:artUrl"].toString() : "";
+                    }
+                    fallbackIcon: "material:album"
+                    border.color: Theme.primary
+                    border.width: 2
                 }
 
                 // Subtle border
@@ -511,7 +524,7 @@ DesktopPluginComponent {
                         color: "transparent"
                         anchors.verticalCenter: parent.verticalCenter
 
-                        DankIcon {
+                        DIcon {
                             anchors.centerIn: parent
                             name: "skip_previous"
                             size: 28 * userScale
@@ -543,7 +556,7 @@ DesktopPluginComponent {
                         color: "transparent"
                         anchors.verticalCenter: parent.verticalCenter
 
-                        DankIcon {
+                        DIcon {
                             anchors.centerIn: parent
                             name: activePlayer && activePlayer.playbackState === MprisPlaybackState.Playing ? "pause" : "play_arrow"
                             size: 28 * userScale
@@ -566,7 +579,7 @@ DesktopPluginComponent {
                         color: "transparent"
                         anchors.verticalCenter: parent.verticalCenter
 
-                        DankIcon {
+                        DIcon {
                             anchors.centerIn: parent
                             name: "skip_next"
                             size: 28 * userScale
@@ -596,7 +609,7 @@ DesktopPluginComponent {
                     spacing: 2 * userScale
 
                     // Integrated DankSeekbar
-                    DankSeekbar {
+                    DSeekbar {
                         id: progressSeekbar
                         width: parent.width
                         height: 16 * userScale // Consistent with previous design

@@ -46,6 +46,7 @@ Ensure this plugin is placed in your Dank Material Shell plugins directory:
 
 ## Requirements
 
+- **DMS 2.0 or newer**: Uses the `D*` widgets from `qs.DCommon.Widgets`.
 - **Quickshell**: The underlying shell framework.
 - **MPRIS compatible player**: Required for media control.
 - **Curl**: Used for downloading remote album art.
