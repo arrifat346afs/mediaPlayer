@@ -457,7 +457,7 @@ DesktopPluginComponent {
                         const m = p.metadata;
                         return m && m["mpris:artUrl"] ? m["mpris:artUrl"].toString() : "";
                     }
-                    fallbackIcon: "album"
+                    fallbackIcon: "material:album"
                     border.color: Theme.primary
                     border.width: 2
                 }
