@@ -1,0 +1,11 @@
+#!/bin/sh
+# Full check. --core skips the QML smoke test, which needs Wayland and DMS 2.0.
+set -eu
+cd "$(dirname "$0")/.."
+python3 scripts/verify.py
+node --test tests/*.test.mjs
+if [ "${1:-}" = "--core" ]; then
+    echo "Core checks passed; QML runtime deliberately skipped (--core)."
+else
+    python3 scripts/qml_smoke.py
+fi
