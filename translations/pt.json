@@ -1,0 +1,53 @@
+{
+    "Album art backdrop": {
+        "Album art backdrop": "Fundo com a capa do álbum"
+    },
+    "Background opacity": {
+        "Background opacity": "Opacidade do fundo"
+    },
+    "Border opacity": {
+        "Border opacity": "Opacidade da borda"
+    },
+    "Draw animated waves behind the controls while media is playing": {
+        "Draw animated waves behind the controls while media is playing": "Desenha ondas animadas atrás dos controles durante a reprodução"
+    },
+    "Hide the widget when no media is playing": {
+        "Hide the widget when no media is playing": "Oculta o widget quando nenhuma mídia está tocando"
+    },
+    "Hide when idle": {
+        "Hide when idle": "Ocultar quando ocioso"
+    },
+    "Next": {
+        "Next": "Próxima"
+    },
+    "No media playing": {
+        "No media playing": "Nenhuma mídia tocando"
+    },
+    "Pause": {
+        "Pause": "Pausar"
+    },
+    "Play": {
+        "Play": "Reproduzir"
+    },
+    "Previous": {
+        "Previous": "Anterior"
+    },
+    "Rotate album art": {
+        "Rotate album art": "Girar capa do álbum"
+    },
+    "Spin the album art while media is playing": {
+        "Spin the album art while media is playing": "Gira a capa do álbum durante a reprodução"
+    },
+    "Unknown artist": {
+        "Unknown artist": "Artista desconhecido"
+    },
+    "Unknown track": {
+        "Unknown track": "Faixa desconhecida"
+    },
+    "Use a blurred copy of the album art as the background": {
+        "Use a blurred copy of the album art as the background": "Usa uma cópia desfocada da capa do álbum como fundo"
+    },
+    "Wave background": {
+        "Wave background": "Fundo de ondas"
+    }
+}
