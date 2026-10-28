@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Removed
+
+- `screenshot_8.png` at the repository root; the screenshot lives in
+  `assets/screenshot.png`.
+
 ## [2.0.0] - 2026-10-28
 
 Maintenance moved from [@arrifat346afs](https://github.com/arrifat346afs) to
