@@ -1,19 +1,16 @@
 {
+    "$schema": "https://github.com/duxlabs-dev/dux-shell/raw/refs/heads/master/quickshell/PLUGINS/plugin-schema.json",
     "id": "mediaPlayer",
     "name": "Media Player",
-    "description": "A feature-rich media player widget with MPRIS support, volume control, playlist management, and audio device switching",
-    "version": "1.0.0",
-    "author": "arrifat346afs",
-    "type": "desktop",
-    "capabilities": ["desktop-widget", "media-player", "mpris", "audio-control"],
-    "component": "./MediaPlayerTab.qml",
-    "settings": "./MediaPlayerSettings.qml",
+    "description": "Desktop MPRIS player with spinning album art, playback controls, a seekbar and an optional wave background.",
+    "version": "2.0.0",
+    "author": "bernardopg",
+    "license": "MIT",
     "icon": "music_note",
+    "type": "desktop",
+    "capabilities": ["desktop-widget", "media-player", "mpris"],
+    "component": "./MediaPlayerWidget.qml",
+    "settings": "./MediaPlayerSettings.qml",
     "requires_dms": ">=2.0.0",
-    "permissions": [
-        "settings_read",
-        "settings_write",
-        "mpris_control",
-        "audio_control"
-    ]
+    "permissions": ["settings_read", "settings_write"]
 }

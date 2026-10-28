@@ -1,0 +1,56 @@
+name: Bug report
+description: Something in the Media Player widget does not work.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Play a song in Spotify
+        2. Pause it from the widget
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: plugin
+    attributes:
+      label: Plugin version
+      description: From `plugin.json` or Settings → Plugins.
+      placeholder: 2.0.0
+    validations:
+      required: true
+  - type: input
+    id: dms
+    attributes:
+      label: Dux Shell version
+      description: Output of `dms version`.
+      placeholder: v2.0.0
+    validations:
+      required: true
+  - type: input
+    id: player
+    attributes:
+      label: Media player
+      description: The app playing the media, and its version if you know it.
+      placeholder: Spotify 1.2.60, Firefox 145, mpv 0.40
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Distribution and compositor
+      placeholder: Arch Linux, niri
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Lines mentioning `mediaPlayer` from `journalctl --user -u dms`.
+      render: text
